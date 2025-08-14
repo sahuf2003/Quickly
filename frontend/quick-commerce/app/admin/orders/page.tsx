@@ -1,26 +1,46 @@
 'use client';
 
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { io, Socket } from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
 import { API_URL } from "@/config/api";
 
-interface OrderStatus {
+// --- Types ---
+interface OrderStatusObj {
+  Picked?: boolean;
+  OntheWay?: boolean;
+  Delivered?: boolean;
+}
+
+interface Order {
+  _id: string;
+  OrderStatus: OrderStatusObj;
+  partnerId?: string | null;
+  createdAt: string;
+}
+
+interface DisplayOrder {
   orderId: string;
   status: string;
   partnerId?: string;
   createdAt: string;
 }
 
+interface OrderLockedEvent {
+  orderId: string;
+  partnerId: string;
+}
+
+// --- Component ---
 export default function AdminOrdersPage() {
   const authorized = useRoleProtection("Admin"); 
-  const [orders, setOrders] = useState<OrderStatus[]>([]);
+  const [orders, setOrders] = useState<DisplayOrder[]>([]);
   const socketRef = useRef<Socket | null>(null);
 
-  const getStatusFromOrder = (orderStatus: any) => {
+  const getStatusFromOrder = (orderStatus: OrderStatusObj): string => {
     if (orderStatus.Delivered) return "Delivered";
     if (orderStatus.OntheWay) return "On the way";
     if (orderStatus.Picked) return "Picked up";
@@ -65,11 +85,11 @@ export default function AdminOrdersPage() {
     // Fetch initial orders
     const fetchOrders = async () => {
       try {
-        const res = await axios.get(`${API_URL}/admin/getOrders`, {
+        const res: AxiosResponse<{ orders: Order[] }> = await axios.get(`${API_URL}/admin/getOrders`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
-        const initialOrders: OrderStatus[] = res.data.orders.map((order: any) => ({
+        const initialOrders: DisplayOrder[] = res.data.orders.map((order) => ({
           orderId: order._id,
           status: getStatusFromOrder(order.OrderStatus),
           partnerId: order.partnerId || undefined,
@@ -77,7 +97,7 @@ export default function AdminOrdersPage() {
         }));
 
         setOrders(initialOrders);
-      } catch (err) {
+      } catch (err: unknown) {
         console.error("Failed to fetch orders:", err);
       }
     };
@@ -85,31 +105,31 @@ export default function AdminOrdersPage() {
     fetchOrders();
 
     // ----------------- SOCKET LISTENERS -----------------
-    const handleNewOrder = (order: any) => {
-      setOrders(prev => [
-        ...prev,
-        {
-          orderId: order._id,
-          status: getStatusFromOrder(order.OrderStatus),
-          partnerId: order.partnerId || undefined,
-          createdAt: order.createdAt,
-        }
-      ]);
+    const handleNewOrder = (order: Order) => {
+      const newOrder: DisplayOrder = {
+        orderId: order._id,
+        status: getStatusFromOrder(order.OrderStatus),
+        partnerId: order.partnerId || undefined,
+        createdAt: order.createdAt,
+      };
+      setOrders((prev) => [...prev, newOrder]);
       toast.info(`New order received: ${order._id}`);
     };
 
-    const handleOrderLocked = ({ orderId, partnerId }: { orderId: string, partnerId: string }) => {
-      setOrders(prev =>
-        prev.map(o => o.orderId === orderId ? { ...o, status: "Locked", partnerId } : o)
+    const handleOrderLocked = ({ orderId, partnerId }: OrderLockedEvent) => {
+      setOrders((prev) =>
+        prev.map((o) =>
+          o.orderId === orderId ? { ...o, status: "Locked", partnerId } : o
+        )
       );
       toast.warning(`Order ${orderId} locked by partner ${partnerId}`);
     };
 
-    const handleOrderStatusUpdated = (order: any) => {
-      setOrders(prev =>
-        prev.map(o =>
+    const handleOrderStatusUpdated = (order: Order) => {
+      setOrders((prev) =>
+        prev.map((o) =>
           o.orderId === order._id
-            ? { ...o, status: getStatusFromOrder(order.OrderStatus), partnerId: order.partnerId }
+            ? { ...o, status: getStatusFromOrder(order.OrderStatus), partnerId: order.partnerId || undefined }
             : o
         )
       );
@@ -134,7 +154,7 @@ export default function AdminOrdersPage() {
     <div className="p-6 bg-purple-50 min-h-screen">
       <h1 className="text-3xl font-bold mb-6 text-purple-700">All Orders</h1>
       {orders.length > 0 ? (
-        orders.map(order => (
+        orders.map((order) => (
           <div
             key={order.orderId}
             className="mb-4 p-4 bg-white rounded-lg shadow border border-purple-200 hover:shadow-md transition"

@@ -1,27 +1,45 @@
-"use client";
+'use client';
 
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import axios, { AxiosResponse } from "axios";
 import { io, Socket } from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
 import { API_URL } from "@/config/api";
 
-interface OrderStatus {
+// --- Types ---
+interface OrderStatusObj {
+  Picked?: boolean;
+  OntheWay?: boolean;
+  Delivered?: boolean;
+}
+
+interface Order {
+  _id: string;
+  OrderStatus: OrderStatusObj;
+  partnerId?: string | null;
+  createdAt: string;
+}
+
+interface DisplayOrder {
   orderId: string;
   status: string;
   partnerId?: string;
   createdAt: string;
 }
 
+interface OrderLockedEvent {
+  orderId: string;
+  partnerId: string;
+}
+
 export default function OrderStatusPage() {
   const authorized = useRoleProtection("Customer");
-  const [orders, setOrders] = useState<OrderStatus[]>([]);
+  const [orders, setOrders] = useState<DisplayOrder[]>([]);
   const socketRef = useRef<Socket | null>(null);
 
-  // Convert backend status to readable string
-  const getStatusFromOrder = (orderStatus: any) => {
+  const getStatusFromOrder = (orderStatus: OrderStatusObj): string => {
     if (orderStatus.Delivered) return "Delivered";
     if (orderStatus.OntheWay) return "On the way";
     if (orderStatus.Picked) return "Picked up";
@@ -46,15 +64,15 @@ export default function OrderStatusPage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    const role = localStorage.getItem('role');
-    if(role!=='Customer') return;
+    const role = localStorage.getItem("role");
+    if (role !== "Customer") return;
+
     if (!socketRef.current) {
-      const socket = io(API_URL, {
+      socketRef.current = io(API_URL, {
         auth: { token },
         transports: ["websocket"],
         autoConnect: false,
       });
-      socketRef.current = socket;
     }
 
     const socket = socketRef.current;
@@ -63,11 +81,12 @@ export default function OrderStatusPage() {
     // Fetch initial orders
     const fetchOrders = async () => {
       try {
-        const res = await axios.get(`${API_URL}/customer/view`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        const res: AxiosResponse<{ orders: Order[] }> = await axios.get(
+          `${API_URL}/customer/view`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-        const initialOrders: OrderStatus[] = res.data.orders.map((order: any) => ({
+        const initialOrders: DisplayOrder[] = res.data.orders.map((order) => ({
           orderId: order._id,
           status: getStatusFromOrder(order.OrderStatus),
           partnerId: order.partnerId || undefined,
@@ -86,28 +105,27 @@ export default function OrderStatusPage() {
 
     fetchOrders();
 
-    // Listen for order locked
-    const handleOrderLocked = (data: any) => {
+    // --- Socket listeners ---
+    const handleOrderLocked = ({ orderId, partnerId }: OrderLockedEvent) => {
       setOrders((prev) =>
         prev.map((order) =>
-          order.orderId === data.orderId
-            ? { ...order, status: "Accepted by partner", partnerId: data.partnerId }
+          order.orderId === orderId
+            ? { ...order, status: "Accepted by partner", partnerId }
             : order
         )
       );
-      toast.info(`Order ${data.orderId} accepted by partner`);
+      toast.info(`Order ${orderId} accepted by partner`);
     };
 
-    // Listen for status updates
-    const handleOrderStatusUpdated = (data: any) => {
+    const handleOrderStatusUpdated = (order: Order) => {
       setOrders((prev) =>
-        prev.map((order) =>
-          order.orderId === data._id
-            ? { ...order, status: getStatusFromOrder(data.OrderStatus) }
-            : order
+        prev.map((o) =>
+          o.orderId === order._id
+            ? { ...o, status: getStatusFromOrder(order.OrderStatus) }
+            : o
         )
       );
-      toast.success(`Order ${data._id} status updated`);
+      toast.success(`Order ${order._id} status updated`);
     };
 
     socket.on("orderLocked", handleOrderLocked);

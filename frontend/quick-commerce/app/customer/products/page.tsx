@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { useRoleProtection } from "@/hooks/useRoleProtection";
-
+import Image from "next/image";
 interface Product {
   id: number;
   name: string;
@@ -12,7 +11,6 @@ interface Product {
 }
 
 export default function ProductCataloguePage() {
-  const authorized = useRoleProtection("Customer");
   const router = useRouter();
   const [cart, setCart] = useState<{ id: number; quantity: number }[]>([]);
 
@@ -106,7 +104,7 @@ export default function ProductCataloguePage() {
               key={product.id}
               className="bg-white rounded-lg shadow-sm p-3 flex flex-col items-center"
             >
-              <img
+              <Image
                 src={product.image}
                 alt={product.name}
                 className="w-full h-40 object-contain rounded-md mb-2"

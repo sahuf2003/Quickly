@@ -17,7 +17,8 @@ export default function AdminSystemStatusPage() {
       const res = await axios.get(`${API_URL}/health`);
       if (res.data.success) setStatus("up");
       else setStatus("down");
-    } catch (err) {
+    } catch (err:unknown) {
+      console.error(err)
       setStatus("down");
     }
   };

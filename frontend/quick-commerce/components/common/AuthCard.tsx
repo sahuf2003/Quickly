@@ -5,6 +5,7 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { API_URL } from "@/config/api";
+
 interface RegisterForm {
   firstName: string;
   lastName: string;
@@ -57,19 +58,24 @@ const AuthPage: React.FC<AuthProps> = ({ defaultRole }) => {
 
       if (isLogin) {
         localStorage.setItem("token", data.token);
-        localStorage.setItem("role", form.roles); // store role for protected routes
+        localStorage.setItem("role", form.roles);
         toast.success("Login successful!");
-        if(defaultRole === "Partner"){
-          window.location.href = "/partners/order"
-        }else{
-          window.location.href = "/customer/products"
+
+        if (defaultRole === "Partner") {
+          window.location.href = "/partners/order";
+        } else {
+          window.location.href = "/customer/products";
         }
       } else {
         toast.success("Registration successful! Please log in.");
         setIsLogin(true);
       }
-    } catch (err: any) {
-      const message = err.response?.data?.message || "Something went wrong";
+    } catch (error: unknown) {
+      // Properly type Axios errors
+      const message =
+        axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : "Something went wrong";
       toast.error(message);
     } finally {
       setLoading(false);
@@ -86,7 +92,7 @@ const AuthPage: React.FC<AuthProps> = ({ defaultRole }) => {
           {!isLogin && (
             <>
               <div>
-                <label className="block text-gray-700 font-medium mb-1" htmlFor="firstName">
+                <label htmlFor="firstName" className="block text-gray-700 font-medium mb-1">
                   First Name
                 </label>
                 <input
@@ -95,12 +101,12 @@ const AuthPage: React.FC<AuthProps> = ({ defaultRole }) => {
                   type="text"
                   value={form.firstName}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
                   required
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
               </div>
               <div>
-                <label className="block text-gray-700 font-medium mb-1" htmlFor="lastName">
+                <label htmlFor="lastName" className="block text-gray-700 font-medium mb-1">
                   Last Name
                 </label>
                 <input
@@ -109,14 +115,14 @@ const AuthPage: React.FC<AuthProps> = ({ defaultRole }) => {
                   type="text"
                   value={form.lastName}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
                   required
+                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
               </div>
             </>
           )}
           <div>
-            <label className="block text-gray-700 font-medium mb-1" htmlFor="email">
+            <label htmlFor="email" className="block text-gray-700 font-medium mb-1">
               Email
             </label>
             <input
@@ -125,12 +131,12 @@ const AuthPage: React.FC<AuthProps> = ({ defaultRole }) => {
               type="email"
               value={form.email}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
               required
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-1" htmlFor="password">
+            <label htmlFor="password" className="block text-gray-700 font-medium mb-1">
               Password
             </label>
             <input
@@ -139,8 +145,8 @@ const AuthPage: React.FC<AuthProps> = ({ defaultRole }) => {
               type="password"
               value={form.password}
               onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
               required
+              className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-purple-400"
             />
           </div>
           <button

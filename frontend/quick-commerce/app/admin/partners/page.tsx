@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
@@ -26,14 +26,25 @@ export default function AdminPartnersPage() {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
-    const role = localStorage.getItem('role');
-    if(role!=='Admin') return;
-        const res = await axios.get(`${API_URL}/admin/getPartners`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+
+        const role = localStorage.getItem("role");
+        if (role !== "Admin") return;
+
+        const res = await axios.get<{ partners: Partner[] }>(
+          `${API_URL}/admin/getPartners`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
         setPartners(res.data.partners);
-      } catch (err: any) {
-        toast.error(err.response?.data?.message || "Failed to fetch partners");
+      } catch (err: unknown) {
+        if (axios.isAxiosError(err)) {
+          toast.error(err.response?.data?.message || "Failed to fetch partners");
+        } else {
+          console.error(err);
+          toast.error("Failed to fetch partners");
+        }
       } finally {
         setLoading(false);
       }

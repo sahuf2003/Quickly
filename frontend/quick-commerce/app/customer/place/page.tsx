@@ -1,14 +1,13 @@
 "use client";
 
 import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { io, Socket } from "socket.io-client";
-import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { API_URL } from "./page";
-export {API_URL} from '@/config/api'
+import { API_URL } from "@/config/api";
+
 interface CartItem {
   name: string;
   quantity: number;
@@ -16,8 +15,6 @@ interface CartItem {
 }
 
 export default function PlaceOrderPage() {
-  const authorized = useRoleProtection("Customer");
-
   const [cart, setCart] = useState<CartItem[]>([]);
   const [amount, setAmount] = useState<number>(0);
   const router = useRouter();
@@ -27,18 +24,21 @@ export default function PlaceOrderPage() {
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    
-    const role = localStorage.getItem('role');
-    if(role!=='Customer') return;
+
+    const role = localStorage.getItem("role");
+    if (role !== "Customer") return;
+
     if (!socketRef.current) {
-      socketRef.current = io(API_URL, {
+      const socket = io(API_URL, {
         auth: { token },
         transports: ["polling", "websocket"],
       });
 
-      socketRef.current.on("connect", () => console.log("✅ Socket connected:", socketRef.current?.id));
-      socketRef.current.on("connect_error", (err) => console.error("Socket error:", err.message));
-      socketRef.current.on("disconnect", (reason) => console.log("Socket disconnected:", reason));
+      socketRef.current = socket;
+
+      socket.on("connect", () => console.log("✅ Socket connected:", socketRef.current?.id));
+      socket.on("connect_error", (err) => console.error("Socket error:", err));
+      socket.on("disconnect", (reason) => console.log("Socket disconnected:", reason));
     }
 
     return () => {
@@ -47,7 +47,7 @@ export default function PlaceOrderPage() {
     };
   }, []);
 
-  // --- Load cart ---
+  // --- Load cart from localStorage ---
   useEffect(() => {
     const savedCart = localStorage.getItem("cart");
     if (savedCart) {
@@ -90,7 +90,11 @@ export default function PlaceOrderPage() {
     if (!token) return toast.error("Please login first!");
 
     try {
-      const payload = { Items: cart.map(({ name, quantity }) => ({ name, quantity })), Amount: amount };
+      const payload = {
+        Items: cart.map(({ name, quantity }) => ({ name, quantity })),
+        Amount: amount,
+      };
+
       const res = await axios.post(`${API_URL}/customer/place`, payload, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -98,6 +102,7 @@ export default function PlaceOrderPage() {
       if (res.data.success) {
         toast.success("Order Placed Successfully");
 
+        // Notify server via Socket.IO
         socketRef.current?.emit("orderPlaced", res.data.order._id);
 
         setCart([]);
@@ -106,9 +111,14 @@ export default function PlaceOrderPage() {
 
         router.push("/customer/order-status");
       }
-    } catch (err: any) {
-      console.error(err.response?.data || err);
-      toast.error(err.response?.data?.message || "Failed to place order");
+    } catch (err: unknown) {
+      if (axios.isAxiosError(err)) {
+        console.error(err.response?.data || err.message);
+        toast.error(err.response?.data?.message || "Failed to place order");
+      } else {
+        console.error(err);
+        toast.error("Failed to place order");
+      }
     }
   };
 
@@ -122,10 +132,15 @@ export default function PlaceOrderPage() {
         <>
           <ul className="mb-4 space-y-2">
             {cart.map((item) => (
-              <li key={item.name} className="flex justify-between items-center bg-white p-3 rounded shadow-sm">
+              <li
+                key={item.name}
+                className="flex justify-between items-center bg-white p-3 rounded shadow-sm"
+              >
                 <div>
                   <p className="font-semibold text-gray-800">{item.name}</p>
-                  <p className="text-gray-500">₹{item.price} × {item.quantity} = ₹{item.price * item.quantity}</p>
+                  <p className="text-gray-500">
+                    ₹{item.price} × {item.quantity} = ₹{item.price * item.quantity}
+                  </p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <button

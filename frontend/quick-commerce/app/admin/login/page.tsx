@@ -38,8 +38,10 @@ const AdminLoginPage = () => {
       toast.success("Admin login successful!");
       // redirect to admin dashboard
       window.location.href = "/admin/panel"; 
-    } catch (err: any) {
-      const message = err.response?.data?.message || "Login failed";
+    } catch (error: unknown) {
+      const message =  axios.isAxiosError(error) && error.response?.data?.message
+          ? error.response.data.message
+          : "Something went wrong";
       toast.error(message);
     } finally {
       setLoading(false);
