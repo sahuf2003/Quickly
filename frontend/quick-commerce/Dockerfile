@@ -1,28 +1,41 @@
-# Stage 1: Build the Next.js app
-FROM node:22.18.0-alpine AS builder
+# Stage 1: Build the app
+FROM node:20-alpine AS builder
+WORKDIR /app
 
-WORKDIR /usr/src/app
+# Accept build args
+ARG NEXT_PUBLIC_API_URL
+
+# Copy package.json and package-lock.json
+COPY package*.json ./
 
 # Install dependencies
-COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
-# Copy the rest of the source code
+# Copy source code
 COPY . .
 
-# Build & export the app
+# Set env for Next.js build
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+
+# Build Next.js app (SSR)
 RUN npm run build
-RUN npx next export
 
-# Stage 2: Serve with Nginx
-FROM nginx:alpine
+# Stage 2: Run the app
+FROM node:20-alpine
+WORKDIR /app
 
-# Copy built files from builder
-COPY --from=builder /usr/src/app/out /usr/share/nginx/html
+# Accept build args again for runtime
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
 
-# Optional: custom nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy necessary files from builder
+COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.ts ./next.config.ts
 
-EXPOSE 80
+EXPOSE 3000
 
-CMD ["nginx", "-g", "daemon off;"]
+# Start Next.js server
+CMD ["npm", "start"]

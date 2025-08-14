@@ -18,16 +18,20 @@ services:
       - "5000:5000"
     environment:
       - PORT=5000
-      - MONGO_URI=mongodb://mongodb:27017/quickcommerce
+      - MONGODB_URL=mongodb://mongodb:27017/quickcommerce
+      - JWT_KEY=MYSECRET
     depends_on:
       - mongodb
 
   frontend:
-    build: ./frontend/quick-commerce
+    build:
+      context: ./frontend/quick-commerce
+      args:
+        NEXT_PUBLIC_API_URL: "http://localhost:5000"  # <-- point to backend container
     container_name: quick_frontend
     restart: always
     ports:
-      - "80:80"  # Serve via Nginx on port 80
+      - "80:3000"
     depends_on:
       - backend
 

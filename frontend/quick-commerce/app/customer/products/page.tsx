@@ -27,6 +27,8 @@ export default function ProductCataloguePage() {
     { id: 8, name: "Tea", price: 70, image: "https://m.media-amazon.com/images/I/51dckF0QWEL._UF1000,1000_QL80_.jpg" },
     { id: 9, name: "Coffee", price: 150, image: "https://m.media-amazon.com/images/I/71OexQTz4-L.jpg" },
     { id: 10, name: "Oil", price: 200, image: "https://m.media-amazon.com/images/I/71wVU7pgwAL.jpg" },
+    { id: 11, name: "Biscuits", price: 20, image:"https://m.media-amazon.com/images/I/61R96f7MhlL._SX679_.jpg" },
+    { id: 12, name: "Namkeen", price: 20, image:"https://m.media-amazon.com/images/I/91s9lgRQN0L.jpg"}
   ];
 
   const addToCart = (productId: number) => {
