@@ -252,5 +252,3 @@ The backend’s WebSocket implementation handles **Customers**, **Delivery Partn
 Watch the full walkthrough here: [Click to watch](https://www.youtube.com/watch?v=hSogFRB6d24)
 
 
-
-```
