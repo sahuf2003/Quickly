@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { io, Socket } from "socket.io-client";
-import { API_URL } from "@/config/api";
+import { API_URL, SOCKET_URL } from "@/config/api";
 
 interface CartItem {
   name: string;
