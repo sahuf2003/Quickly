@@ -6,7 +6,7 @@ import { io, Socket } from "socket.io-client";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useRoleProtection } from "@/hooks/useRoleProtection";
-import { API_URL } from "@/config/api";
+import { API_URL, SOCKET_URL } from "@/config/api";
 
 // --- Types ---
 interface OrderStatusObj {
@@ -68,7 +68,8 @@ export default function OrderStatusPage() {
     if (role !== "Customer") return;
 
     if (!socketRef.current) {
-      socketRef.current = io(API_URL, {
+      socketRef.current = io(SOCKET_URL, {
+        path:"/mysocket/",
         auth: { token },
         transports: ["websocket"],
         autoConnect: false,
