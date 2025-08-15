@@ -20,7 +20,7 @@ A **Full-Stack + DevOps** real-time order and delivery platform, self-hosted on 
 
 ## 💡 Tech Stack
 
-**Frontend:** Next.js , TailwindCSS /  Axios  
+**Frontend:** Next.js , TailwindCSS, TypeScript, Socket.io-client
 **Backend:** Node.js, Express.js, Socket.io  
 **Database:** MongoDB (Dockerized)  
 **Authentication:** JWT with Role-Based Access Control  
