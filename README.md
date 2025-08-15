@@ -1,8 +1,6 @@
 
 # 🚀 QUICKLY
 
----
-
 ## ✨ Project Overview
 
 A **Full-Stack + DevOps** real-time order and delivery platform, self-hosted on **Google Cloud Platform (GCP)**, designed to:
