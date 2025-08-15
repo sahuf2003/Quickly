@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { io, Socket } from "socket.io-client";
-import { API_URL } from "@/config/api";
+import { SOCKET_URL } from "@/config/api";
 
 // --- Types ---
 interface OrderStatus {
@@ -80,7 +80,8 @@ export default function PartnerOrdersPage() {
     }
 
     if (!socketRef.current) {
-      const socket = io(API_URL, {
+      const socket = io(SOCKET_URL, {
+        path:"/mysocket/",
         auth: { token },
         transports: ["polling", "websocket"],
         autoConnect: false,
