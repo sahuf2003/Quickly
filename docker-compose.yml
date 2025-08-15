@@ -1,9 +1,9 @@
-version: '3.8'
+version: "3.9"
 
 services:
   mongodb:
-    image: mongo:latest
-    container_name: mongodb
+    image: mongo
+    container_name: quick_mongo
     restart: always
     ports:
       - "27017:27017"
@@ -27,11 +27,12 @@ services:
     build:
       context: ./frontend/quick-commerce
       args:
-        NEXT_PUBLIC_API_URL: "http://localhost:5000"  # <-- point to backend container
+        NEXT_PUBLIC_API_URL: "http://localhost:5000"
+        NEXT_PUBLIC_SOCKET_URL: "http://localhost:5000"
     container_name: quick_frontend
     restart: always
     ports:
-      - "80:3000"
+      - "3000:3000"
     depends_on:
       - backend
 

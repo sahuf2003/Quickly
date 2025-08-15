@@ -4,6 +4,7 @@ WORKDIR /app
 
 # Accept build args
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_SOCKET_URL
 
 # Copy package.json and package-lock.json
 COPY package*.json ./
@@ -16,6 +17,7 @@ COPY . .
 
 # Set env for Next.js build
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
 
 # Build Next.js app (SSR)
 RUN npm run build
@@ -26,7 +28,9 @@ WORKDIR /app
 
 # Accept build args again for runtime
 ARG NEXT_PUBLIC_API_URL
+ARG NEXT_PUBLIC_SOCKET_URL
 ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_SOCKET_URL=$NEXT_PUBLIC_SOCKET_URL
 
 # Copy necessary files from builder
 COPY --from=builder /app/package*.json ./
