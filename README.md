@@ -184,8 +184,9 @@ docker-compose up -d --build
 
 ### 5️⃣ Access the application
 
-* **Frontend:** `https://sahuf.com`
-* **Backend API:** `https://api.sahuf.com`
+* **Frontend:** [http://sahuf.com](http://sahuf.com/)
+
+* **Backend API:** [https://api.sahuf.com](https://api.sahuf.com)
 * **WebSocket:** `wss://api.sahuf.com`
 
 ---
