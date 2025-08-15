@@ -29,7 +29,8 @@ export default function PlaceOrderPage() {
     if (role !== "Customer") return;
 
     if (!socketRef.current) {
-      const socket = io(API_URL, {
+      const socket = io(SOCKET_URL, {
+        path:"/mysocket/",
         auth: { token },
         transports: ["polling", "websocket"],
       });
