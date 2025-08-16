@@ -154,8 +154,8 @@ sudo apt install nano -y
 ### 3️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/your-username/quickly.git
-cd quickly
+git clone https://github.com/sahuf2003/!uickly.git
+cd Quickly
 ```
 
 
@@ -249,5 +249,9 @@ The backend’s WebSocket implementation handles **Customers**, **Delivery Partn
 
 ## 🎥 Demo Video
 Watch the full walkthrough here: [Click to watch](https://www.youtube.com/watch?v=hSogFRB6d24)
+
+
+Admin email : admin@gmail.com
+Admin password : admin123
 
 
