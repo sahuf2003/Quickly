@@ -154,7 +154,7 @@ sudo apt install nano -y
 ### 3️⃣ Clone the repository
 
 ```bash
-git clone https://github.com/sahuf2003/!uickly.git
+git clone https://github.com/sahuf2003/Quickly.git
 cd Quickly
 ```
 
